@@ -3,7 +3,7 @@
 
     <string name="app_name">Ruhua</string>
     <string name="hello_world">Hello world!</string>
-    <string name="input_rem">please select intensity levels </string>
+    <string name="input_rem">please select Radius and intensity levels </string>
     <string name="action_settings">Settings</string>
     
 

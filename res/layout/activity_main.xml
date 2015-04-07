@@ -14,21 +14,74 @@
         android:layout_height="wrap_content"
         android:text="@string/input_rem" />
 
-    <SeekBar
-        android:id="@+id/seekBar2"
+    <LinearLayout
+        android:id="@+id/linearLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignTop="@+id/seekBar1"
-        android:layout_marginTop="14dp"
-        android:max="5" />
-
-    <SeekBar
-        android:id="@+id/seekBar1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/seekBar2"
         android:layout_below="@+id/textView1"
-        android:layout_marginTop="49dp" />
+        android:layout_marginTop="20dp" >
+        
+        <SeekBar
+            android:id="@+id/RadiusBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="5" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/linearLayout1"
+        android:layout_below="@+id/linearLayout1"
+        android:layout_marginTop="42dp" >
+
+        <SeekBar
+            android:id="@+id/IntensityBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="5" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:src="@android:drawable/ic_menu_gallery" />
+
+    <LinearLayout
+        android:id="@+id/buttonLayout"        
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/linearLayout2"
+        android:layout_alignParentBottom="true" >
+
+        <ImageButton
+            android:id="@+id/addButton"
+            
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:src="@android:drawable/ic_menu_add" />
+        
+		<View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            />                
+        
+        <ImageButton
+            android:id="@+id/saveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"            
+            android:background="@null"
+            android:src="@android:drawable/ic_menu_save" />
+
+    </LinearLayout>
 
 </RelativeLayout>
