@@ -2,6 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:drawable/screen_background_dark"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
@@ -14,42 +15,10 @@
         android:layout_height="wrap_content"
         android:text="@string/input_rem" />
 
-    <LinearLayout
-        android:id="@+id/linearLayout1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/textView1"
-        android:layout_marginTop="20dp" >
-        
-        <SeekBar
-            android:id="@+id/RadiusBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:max="5" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/linearLayout2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/linearLayout1"
-        android:layout_below="@+id/linearLayout1"
-        android:layout_marginTop="42dp" >
-
-        <SeekBar
-            android:id="@+id/IntensityBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:max="5" />
-    </LinearLayout>
-
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:src="@android:drawable/ic_menu_gallery" />
@@ -73,7 +42,20 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_weight="1"
-            />                
+            />
+
+		<ImageButton
+		    android:id="@+id/cameraButton"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:background="@null"
+		    android:src="@android:drawable/ic_menu_camera" />
+
+		<View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            />
         
         <ImageButton
             android:id="@+id/saveButton"
@@ -82,6 +64,37 @@
             android:background="@null"
             android:src="@android:drawable/ic_menu_save" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonLayout"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="16dp" >
+
+        <SeekBar
+            android:id="@+id/IntensityBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="3" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/linearLayout2"
+        android:layout_alignLeft="@+id/imageView" >
+
+        <SeekBar
+            android:id="@+id/RadiusBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="10" />
     </LinearLayout>
 
 </RelativeLayout>
