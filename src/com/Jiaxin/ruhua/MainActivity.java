@@ -1,7 +1,6 @@
 package com.Jiaxin.ruhua;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -12,10 +11,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,7 +33,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 	private ImageButton cameraButton;
 	private ImageView imageView;
 	private Bitmap origionBitmap = null;
-	private Bitmap modifiedBitmap = null;
+	private int compressRate = 32;
 
 	private TextView textProgress;
 	private final int radiusBarID = R.id.RadiusBar; 
@@ -44,7 +42,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 	private int intensity =1;
 	private final int PICK_IMAGE_REQUEST = 1;
 	private final static String TAG ="RUH_main";
-	private BitmapFactory.Options btoptions ,options;
+	private BitmapFactory.Options options;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		 Log.d(TAG, "on create");
@@ -86,8 +84,9 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 
 			   Toast.makeText(getApplicationContext(),"cameraButton is clicked!", Toast.LENGTH_SHORT).show();
 			   Log.d(TAG, "cameraButton is clicked!");
-			   modifiedBitmap = oilPaint(origionBitmap, radius, intensity);
-			   imageView.setImageBitmap(modifiedBitmap);
+			  // modifiedBitmap = oilPaint(origionBitmap, radius, intensity);
+			  // imageView.setImageBitmap(modifiedBitmap);
+			   new Imageprocessing().execute(origionBitmap);
 				}			 
 			});
 		
@@ -143,7 +142,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 	        	
 	        	InputStream is = getContentResolver().openInputStream(uri);
 	        	Log.d(TAG, uri.toString());
-	        	btoptions = new BitmapFactory.Options();
+	        	
 	        	// to be debuged auto fit screen , now will triger null in factory
 	        	/*
 	        	btoptions.inJustDecodeBounds = true;
@@ -152,10 +151,10 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 	    		displayHeight = imageView.getHeight();
 	        	int temp = calculateInSampleSize(btoptions, displayWidth, displayHeight);
 	        	*/
-	        	int temp=8;
-	        	Log.d(TAG, "temp:" + temp);
+	        	
+	        	Log.d(TAG, "compressRate:" + compressRate);
 	        	options = new BitmapFactory.Options();
-	        	options.inSampleSize = temp;
+	        	options.inSampleSize = compressRate;
 	        	options.inJustDecodeBounds = false;
 	        	origionBitmap = BitmapFactory.decodeStream(is, null, options);
 	            is.close();
@@ -212,14 +211,21 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 	public void onStopTrackingTouch(SeekBar seekBar) {
 		// TODO Auto-generated method stub
 		
-	}
+	}	
+	
+	
+
+
+private class Imageprocessing extends AsyncTask<Bitmap, Void, Bitmap> {
+	
+	private Bitmap modifiedBitmap = null;
 	
 	
 	
-	
-	 public Bitmap oilPaint(Bitmap bitmap, int radius, int intensityLevels){
-		  int x, y;
-		  Bitmap newbmp = bitmap.copy(bitmap.getConfig(), true);
+	 private Bitmap oilPaint(Bitmap[] origionBitmaps, int radius, int intensityLevels){
+		 Bitmap origionBitmap = origionBitmaps[0]; // not good practice temp solution
+		 int x, y;
+		  Bitmap newbmp = origionBitmap.copy(origionBitmap.getConfig(), true);
 		  /*Step1
 		   *For each pixel, all pixels within the radius will have to be examined. 
 		   *Pixels within the radius of the current pixel will be referred to as sub-pixels. 
@@ -233,14 +239,14 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 			int averageB[]=new int[intensityLevels];
 			int intensityCount[]=new int[intensityLevels];
 			
-		  for (x = 0; x < bitmap.getWidth(); x++) {
+		  for (x = 0; x < origionBitmap.getWidth(); x++) {
 			int left = Math.max(0,x-radius);
-			int right = Math.min(x+radius,bitmap.getWidth()-1);
-		      for (y = 0; y < bitmap.getHeight(); y++) {
+			int right = Math.min(x+radius,origionBitmap.getWidth()-1);
+		      for (y = 0; y < origionBitmap.getHeight(); y++) {
 		    	 
 		     
 		    	int top = Math.max(0,y-radius);
-				int bottom = Math.min(y+radius,bitmap.getHeight()-1);					
+				int bottom = Math.min(y+radius,origionBitmap.getHeight()-1);					
 				Arrays.fill(averageR,0);
 				Arrays.fill(averageG,0);
 				Arrays.fill(averageB,0);
@@ -259,7 +265,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 					//int green = (rgb >>8)&0xFF;
 					//int blue = (rgb )&0xFF;
 					
-					int pixel = bitmap.getPixel(i,j);
+					int pixel = origionBitmap.getPixel(i,j);
 					int red = Color.red(pixel);
 					int blue = Color.blue(pixel);
 					int green = Color.green(pixel);
@@ -294,7 +300,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 		    }
 		  //newbmp.setPixel(100, 100, Color.rgb(255, 0, 0));
 		  Log.d(TAG, "finish");
-		  Toast.makeText(getApplicationContext(),"finish!", Toast.LENGTH_SHORT).show();
+		  //Toast.makeText(getApplicationContext(),"finish!", Toast.LENGTH_SHORT).show();
 		  	return newbmp;	 
 	  }
 	 private boolean isInRange(int cx,int cy,int i,int j, int radius)
@@ -303,6 +309,20 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 		//d= java.awt.geom.Line2D.ptLineDist(cx, cy, cx-radius, cy-radius, i, j);
 		d=Math.sqrt((cx-i)*(cx-i)+(cy-j)*(cy-j));
 		return d<radius;
-		} 
+		}
+	@Override
+	protected Bitmap doInBackground(Bitmap... origionBitmap) {
+		// TODO Auto-generated method stub
+		modifiedBitmap = oilPaint(origionBitmap, radius, intensity);
+		return modifiedBitmap;
+	}
+	@Override
+	protected void onPostExecute(Bitmap result) {
+		imageView.setImageBitmap(result);
+    }
+
+
 	
+	}
+
 }
