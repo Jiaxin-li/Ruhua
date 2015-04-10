@@ -56,6 +56,19 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             />
+
+		<ImageButton
+		    android:id="@+id/processButton"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:background="@null"
+		    android:src="@android:drawable/ic_popup_sync" />
+		
+		<View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            />
         
         <ImageButton
             android:id="@+id/saveButton"
@@ -79,7 +92,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:max="3" />
+            android:max="2" />
     </LinearLayout>
 
     <LinearLayout
@@ -96,5 +109,14 @@
             android:layout_weight="1"
             android:max="20" />
     </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar1"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:visibility="invisible" />
 
 </RelativeLayout>

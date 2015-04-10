@@ -1,18 +1,27 @@
 package com.Jiaxin.ruhua;
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+
+
 
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,6 +29,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -31,9 +41,13 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 	private ImageButton addButton;
 	private ImageButton saveButton;
 	private ImageButton cameraButton;
+	private ImageButton processButton;
+	private ProgressBar progressBar; 
 	private ImageView imageView;
 	private Bitmap origionBitmap = null;
-	private int compressRate = 32;
+	private Bitmap modifiedBitmap = null;
+	private Uri uri;
+	private int compressRate = 4;
 
 	private TextView textProgress;
 	private final int radiusBarID = R.id.RadiusBar; 
@@ -41,6 +55,7 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 	private int radius =1;
 	private int intensity =1;
 	private final int PICK_IMAGE_REQUEST = 1;
+	private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
 	private final static String TAG ="RUH_main";
 	private BitmapFactory.Options options;
 	@Override
@@ -51,16 +66,17 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 		radiusBar = (SeekBar)findViewById(radiusBarID);
 		intensityBar = (SeekBar)findViewById(intensityBarID);
 		imageView = (ImageView) findViewById(R.id.imageView);
-		
-
+		progressBar = (ProgressBar) findViewById(R.id.progressBar1);
+		progressBar.setVisibility(android.view.View.INVISIBLE);
 		textProgress = (TextView)findViewById(R.id.textView1);
 		addButton =  (ImageButton)findViewById(R.id.addButton);
 		saveButton =  (ImageButton)findViewById(R.id.saveButton);
 		cameraButton =  (ImageButton)findViewById(R.id.cameraButton);
+		processButton =  (ImageButton)findViewById(R.id.processButton);
 		addButton.setOnClickListener(new OnClickListener() {			 
 			@Override
 			public void onClick(View arg0) {
-					Toast.makeText(getApplicationContext(),"addButton is clicked!", Toast.LENGTH_SHORT).show(); 
+					//Toast.makeText(getApplicationContext(),"addButton is clicked!", Toast.LENGTH_SHORT).show(); 
 					 Log.d(TAG, "addButton is clicked!");
 					Intent intent = new Intent();
 					// Show only images, no videos or anything else
@@ -70,23 +86,42 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 					startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
 				}			 
 			});
+		
+		cameraButton.setOnClickListener(new OnClickListener() {			 
+			@Override
+			public void onClick(View arg0) {
+					//Toast.makeText(getApplicationContext(),"addButton is clicked!", Toast.LENGTH_SHORT).show(); 
+					 Log.d(TAG, "cameraButton is clicked!");
+					
+					// Show only images, no videos or anything else
+					Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+					//intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+					// Always show the chooser (if there are multiple options available)
+					 startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+				}			 
+			});
 		saveButton.setOnClickListener(new OnClickListener() {			 
 			@Override
 			public void onClick(View arg0) {
 
-			   Toast.makeText(getApplicationContext(),"saveButton is clicked!", Toast.LENGTH_SHORT).show();
+			   //Toast.makeText(getApplicationContext(),"saveButton is clicked!", Toast.LENGTH_SHORT).show();
+				onTakePicture( );
 			   Log.d(TAG, "saveButton is clicked!");
 				}			 
 			});
-		cameraButton.setOnClickListener(new OnClickListener() {			 
+		processButton.setOnClickListener(new OnClickListener() {			 
 			@Override
 			public void onClick(View arg0) {
-
-			   Toast.makeText(getApplicationContext(),"cameraButton is clicked!", Toast.LENGTH_SHORT).show();
-			   Log.d(TAG, "cameraButton is clicked!");
-			  // modifiedBitmap = oilPaint(origionBitmap, radius, intensity);
-			  // imageView.setImageBitmap(modifiedBitmap);
-			   new Imageprocessing().execute(origionBitmap);
+				Log.d(TAG, "processButton is clicked!");
+				if(origionBitmap==null){
+					Toast.makeText(getApplicationContext(),"please select an image first!", Toast.LENGTH_SHORT).show();
+				}
+				else{
+					progressBar.setVisibility(android.view.View.VISIBLE);
+					 new Imageprocessing().execute(origionBitmap);
+				}			   
+		
+			  
 				}			 
 			});
 		
@@ -133,73 +168,58 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 	    super.onActivityResult(requestCode, resultCode, data);
 	 
 	    if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-	    	Log.d(TAG, "if block");
-	        Uri uri = data.getData();
-	 
-	        try {
-	        	
-	          
-	        	
-	        	InputStream is = getContentResolver().openInputStream(uri);
-	        	Log.d(TAG, uri.toString());
-	        	
-	        	// to be debuged auto fit screen , now will triger null in factory
-	        	/*
-	        	btoptions.inJustDecodeBounds = true;
-	        	BitmapFactory.decodeStream(is, null, btoptions);
-	    		displayWidth = imageView.getWidth(); 
-	    		displayHeight = imageView.getHeight();
-	        	int temp = calculateInSampleSize(btoptions, displayWidth, displayHeight);
-	        	*/
-	        	
-	        	Log.d(TAG, "compressRate:" + compressRate);
-	        	options = new BitmapFactory.Options();
-	        	options.inSampleSize = compressRate;
-	        	options.inJustDecodeBounds = false;
-	        	origionBitmap = BitmapFactory.decodeStream(is, null, options);
-	            is.close();
-	            
-	            imageView.setImageBitmap(origionBitmap);
-	            /*
-	            imageView.getLayoutParams().width = displayWidth;
-	            imageView.getLayoutParams().height = displayHeight;
-	            imageView.setImageBitmap(bitmap);
-	            imageView.setVisibility(View.VISIBLE);
-	            */
-	        } catch (IOException e) {
-	        	 Log.d(TAG, "image exception");
-	            e.printStackTrace();
+	    	
+	        uri = data.getData();
+	        fetchImage(uri);
+	    }
+	    
+	    if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
+	    	//Log.d(TAG, data.getDataString());
+	        if (resultCode == RESULT_OK ) {
+	        	origionBitmap = (Bitmap) data.getExtras().get("data");
+	        	imageView.setImageBitmap(origionBitmap);
+	            // Image captured and saved to fileUri specified in the Intent
+	        	/*	
+	            if(data.getData() == null){
+	            	Log.d(TAG, "data getdata null");
+	            }
+	            else{
+	            	uri = data.getData();
+	            	fetchImage(uri);
+	            }
+	        */
+	        } else if (resultCode == RESULT_CANCELED) {
+	            // User cancelled the image capture
+	        	Log.d(TAG, "cancel");
+	        } else {
+	            // Image capture failed, advise user
+	        	Log.d(TAG,"fail");
 	        }
-	        
 	    }
 	   
 	    
 	}
 	
-	public static int calculateInSampleSize(
-    BitmapFactory.Options options, int reqWidth, int reqHeight) {
-    // Raw height and width of image
-    final int height = options.outHeight;
-    final int width = options.outWidth;
-    Log.d(TAG, "Raw height: "+ height + " Raw width: "+ width);
-    int inSampleSize = 1;
-
-    if (height > reqHeight || width > reqWidth) {
-
-        final int halfHeight = height / 2;
-        final int halfWidth = width / 2;
-
-        // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-        // height and width larger than the requested height and width.
-        Log.d(TAG, "halfHeight: "+ halfHeight +  " halfWidth: "+ halfWidth +" inSampleSize: "+ inSampleSize +  " reqHeight: "+ reqHeight );
-        while ((halfHeight / inSampleSize) > reqHeight || (halfWidth / inSampleSize) > reqWidth) {
-            inSampleSize *= 2;
+	void fetchImage(Uri uri){
+		try {	        	
+        	InputStream is = getContentResolver().openInputStream(uri);
+        	Log.d(TAG, uri.toString());        	
+        	Log.d(TAG, "compressRate:" + compressRate);
+        	options = new BitmapFactory.Options();
+        	options.inSampleSize = compressRate;
+        	options.inJustDecodeBounds = false;
+        	origionBitmap = BitmapFactory.decodeStream(is, null, options);
+            is.close();
             
+            imageView.setImageBitmap(origionBitmap);
+            
+        } catch (IOException e) {
+        	 Log.d(TAG, "image exception");
+            e.printStackTrace();
         }
-    }
-    Log.d(TAG, "inSampleSize: "+inSampleSize);
-    return inSampleSize;
-}
+	}
+	
+
 
 	@Override
 	public void onStartTrackingTouch(SeekBar seekBar) {
@@ -213,12 +233,76 @@ public class MainActivity extends Activity implements OnSeekBarChangeListener{
 		
 	}	
 	
+	public void onTakePicture( ) {		
+		
+		if (! isExternalStorageReadable() && ! isExternalStorageReadable()) return;
+		
+		Long currentTime = System.currentTimeMillis() / 1000L; // Long time
+		
+		// Create pictures directory
+		File picturesDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "RUHUA");
+		picturesDirectory.mkdirs();
+		
+		String picturesDirectoryPath = picturesDirectory.getPath();
+		String newImagePath = picturesDirectoryPath + File.separator + "RUHUA" + currentTime + ".jpg";
+		Log.d(TAG,"newImagePath :"+ newImagePath);
+		File file = new File(newImagePath);
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		
+		
+		if (modifiedBitmap == null) {
+			Toast.makeText(MainActivity.this, "no image to store", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		
+		FileOutputStream fos = null;
+		
+		try {
+	        file.createNewFile();
+	       
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+		
+		modifiedBitmap .compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+		
+		try {
+			fos = new FileOutputStream(file);
+	    } catch (FileNotFoundException e) {
+	        e.printStackTrace();
+	    }
+		
+		try {
+	        fos.write(bytes.toByteArray());
+	        fos.close();
+	        Toast.makeText(MainActivity.this, "Image stored: " + newImagePath, Toast.LENGTH_SHORT).show();
+	        
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
 	
+	public boolean isExternalStorageWritable() {
+	    String state = Environment.getExternalStorageState();
+	    if (Environment.MEDIA_MOUNTED.equals(state)) {
+	        return true;
+	    }
+	    return false;
+	}
+
+	public boolean isExternalStorageReadable() {
+	    String state = Environment.getExternalStorageState();
+	    if (Environment.MEDIA_MOUNTED.equals(state) ||
+	        Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+	        return true;
+	    }
+	    return false;
+	}
 
 
 private class Imageprocessing extends AsyncTask<Bitmap, Void, Bitmap> {
 	
-	private Bitmap modifiedBitmap = null;
+	
 	
 	
 	
@@ -238,15 +322,16 @@ private class Imageprocessing extends AsyncTask<Bitmap, Void, Bitmap> {
 			int averageG[]=new int[intensityLevels];
 			int averageB[]=new int[intensityLevels];
 			int intensityCount[]=new int[intensityLevels];
-			
-		  for (x = 0; x < origionBitmap.getWidth(); x++) {
+			int imageHeight = origionBitmap.getHeight();
+			int imageWidth = origionBitmap.getWidth();
+			progressBar.setMax(imageHeight*imageWidth);
+			Log.d(TAG, "progress max:" + imageHeight*imageWidth);
+		  for (x = 0; x < imageWidth ; x++) {
 			int left = Math.max(0,x-radius);
-			int right = Math.min(x+radius,origionBitmap.getWidth()-1);
-		      for (y = 0; y < origionBitmap.getHeight(); y++) {
-		    	 
-		     
+			int right = Math.min(x+radius,imageWidth-1);			
+		      for (y = 0; y < imageHeight; y++) {		    	
 		    	int top = Math.max(0,y-radius);
-				int bottom = Math.min(y+radius,origionBitmap.getHeight()-1);					
+				int bottom = Math.min(y+radius,imageHeight-1);					
 				Arrays.fill(averageR,0);
 				Arrays.fill(averageG,0);
 				Arrays.fill(averageB,0);
@@ -292,10 +377,9 @@ private class Imageprocessing extends AsyncTask<Bitmap, Void, Bitmap> {
 				int b = averageB[maxIndex] / curMax;
 				
 				//int rgb=((r << 16) | ((g << 8) | b));
-				//img.setRGB(x,y,rgb);
-				
-				
+				//img.setRGB(x,y,rgb);								
 				newbmp.setPixel(x, y, Color.rgb(r, g, b));
+				progressBar.incrementProgressBy(1);
 		      }
 		    }
 		  //newbmp.setPixel(100, 100, Color.rgb(255, 0, 0));
@@ -319,6 +403,7 @@ private class Imageprocessing extends AsyncTask<Bitmap, Void, Bitmap> {
 	@Override
 	protected void onPostExecute(Bitmap result) {
 		imageView.setImageBitmap(result);
+		progressBar.setVisibility(android.view.View.INVISIBLE);
     }
 
 

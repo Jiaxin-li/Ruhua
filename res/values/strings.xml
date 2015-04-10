@@ -3,7 +3,7 @@
 
     <string name="app_name">Ruhua</string>
     <string name="hello_world">Hello world!</string>
-    <string name="input_rem">please click + button to select the image to convert adjust Radius and intensity levels /n NOTE: It may take sometime for processing depending on the device and args</string>
+    <string name="input_rem">please click + button to select the image to convert adjust Radius and intensity levels \n NOTE: It may take sometime(up to several minutes) for processing depending on the device and args</string>
     <string name="action_settings">Settings</string>
     
 
